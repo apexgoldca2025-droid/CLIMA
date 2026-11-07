@@ -34,7 +34,6 @@
       overflow-x: hidden;
     }
 
-    /* ENCABEZADO MÓVIL OPTIMIZADO */
     header {
       background: rgba(11, 15, 25, 0.98);
       backdrop-filter: blur(10px);
@@ -75,13 +74,11 @@
       100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
     }
 
-    /* CONTENEDOR PRINCIPAL */
     .container {
       max-width: 1200px; margin: 0 auto; padding: 0.75rem;
       width: 100%; flex: 1; display: flex; flex-direction: column; gap: 0.75rem;
     }
 
-    /* BARRA DE CONTROLES MÓVIL */
     .control-bar {
       display: flex; flex-direction: column; gap: 0.75rem;
       background: var(--bg-card); border: 1px solid var(--border-color);
@@ -107,7 +104,6 @@
       display: flex; align-items: center; justify-content: center; gap: 0.5rem;
     }
 
-    /* VISOR MÓVIL */
     .visor-card {
       background: var(--bg-card); border: 1px solid var(--border-color);
       border-radius: 10px; overflow: hidden; display: flex; flex-direction: column;
@@ -132,19 +128,24 @@
       background: var(--accent-blue); color: white; border-color: var(--accent-blue);
     }
 
+    /* CONTENEDOR CON RECORTE PARA OCULTAR LA BARRA BLANCA INFERIOR */
     .map-frame-wrapper {
       width: 100%;
-      height: 380px;
+      height: 320px;
       background: #000;
+      position: relative;
+      overflow: hidden;
     }
 
     .map-frame-wrapper iframe {
       width: 100%;
-      height: 100%;
+      height: 440px; /* Se expande para empujar la barra fuera del visor visible */
       border: none;
+      position: absolute;
+      top: 0;
+      left: 0;
     }
 
-    /* PANEL METEOROLÓGICO MÓVIL */
     .weather-panel { display: flex; flex-direction: column; gap: 0.75rem; }
 
     .current-card {
@@ -173,7 +174,6 @@
     .metric-item span { display: block; font-size: 0.7rem; color: var(--text-muted); }
     .metric-item strong { font-size: 0.9rem; color: var(--text-main); }
 
-    /* PRONÓSTICO HORA A HORA */
     .hourly-card {
       background: var(--bg-card); border: 1px solid var(--border-color);
       border-radius: 10px; padding: 1rem;
@@ -196,7 +196,6 @@
     .hourly-item .rain { font-size: 0.7rem; color: var(--accent-cyan); margin: 0.2rem 0; }
     .hourly-item .temp { font-size: 0.9rem; font-weight: 600; }
 
-    /* PIE DE PÁGINA */
     footer {
       border-top: 1px solid var(--border-color); padding: 1rem;
       text-align: center; font-size: 0.75rem; color: var(--text-muted);
@@ -207,7 +206,6 @@
 </head>
 <body>
 
-  <!-- ENCABEZADO -->
   <header>
     <div class="brand">
       <i class="fa-solid fa-earth-americas"></i>
@@ -226,7 +224,6 @@
 
   <div class="container">
     
-    <!-- CONTROLES -->
     <div class="control-bar">
       <div class="city-selector">
         <label for="select-city"><i class="fa-solid fa-location-dot"></i> Región:</label>
@@ -247,7 +244,6 @@
 
     <div class="weather-panel">
       
-      <!-- VISOR SATELITAL MÓVIL -->
       <div class="visor-card">
         <div class="visor-header">
           <h3><i class="fa-solid fa-satellite-dish"></i> Radar Satelital & Nubes</h3>
@@ -258,11 +254,10 @@
           </div>
         </div>
         <div class="map-frame-wrapper">
-          <iframe id="windy-frame" src="https://embed.windy.com/embed2.html?lat=10.2469&lon=-67.5958&detailLat=10.2469&detailLon=-67.5958&width=400&height=380&zoom=7&level=surface&overlay=rain&product=ecmwf&menu=&message=&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"></iframe>
+          <iframe id="windy-frame" src="https://embed.windy.com/embed2.html?lat=10.2469&lon=-67.5958&detailLat=10.2469&detailLon=-67.5958&width=400&height=440&zoom=7&level=surface&overlay=rain&product=ecmwf&menu=&message=&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"></iframe>
         </div>
       </div>
 
-      <!-- ESTADO ACTUAL -->
       <div class="current-card">
         <h4 id="city-title"><i class="fa-solid fa-location-dot"></i> Maracay</h4>
         <div class="current-temp-box">
@@ -293,18 +288,14 @@
         </div>
       </div>
 
-      <!-- PRONÓSTICO HORA A HORA -->
       <div class="hourly-card">
         <h4><i class="fa-regular fa-clock"></i> Pronóstico Próximas Horas</h4>
-        <div class="hourly-list" id="hourly-container">
-          <!-- Cargado por JS -->
-        </div>
+        <div class="hourly-list" id="hourly-container"></div>
       </div>
 
     </div>
   </div>
 
-  <!-- PIE DE PÁGINA -->
   <footer>
     <p>Desarrollado por <strong>Alfredo Belandria</strong></p>
     <p style="margin-top: 0.2rem; font-size: 0.7rem;">Sincronizado en tiempo real con estaciones y satélite</p>
@@ -317,7 +308,7 @@
 
     function updateWindyIframe() {
       const iframe = document.getElementById('windy-frame');
-      iframe.src = `https://embed.windy.com/embed2.html?lat=${currentLat}&lon=${currentLon}&detailLat=${currentLat}&detailLon=${currentLon}&width=400&height=380&zoom=7&level=surface&overlay=${currentOverlay}&product=ecmwf&menu=&message=&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1`;
+      iframe.src = `https://embed.windy.com/embed2.html?lat=${currentLat}&lon=${currentLon}&detailLat=${currentLat}&detailLon=${currentLon}&width=400&height=440&zoom=7&level=surface&overlay=${currentOverlay}&product=ecmwf&menu=&message=&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1`;
     }
 
     function setWindyOverlay(overlay) {
