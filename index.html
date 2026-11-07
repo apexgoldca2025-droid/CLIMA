@@ -9,8 +9,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <style>
     :root {
@@ -131,7 +129,17 @@
       background: var(--accent-blue); color: white; border-color: var(--accent-blue);
     }
 
-    #nasa-map { width: 100%; height: 500px; background: #050811; z-index: 1; }
+    .map-frame-wrapper {
+      width: 100%;
+      height: 520px;
+      background: #000;
+    }
+
+    .map-frame-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
 
     .weather-panel { display: flex; flex-direction: column; gap: 1.5rem; }
 
@@ -195,7 +203,7 @@
     </div>
     <div class="header-status">
       <div class="live-badge">
-        <div class="pulse"></div> SATÉLITE EN VIVO
+        <div class="pulse"></div> RADAR Y NUBES EN VIVO
       </div>
       <div><i class="fa-regular fa-clock"></i> UTC: <span id="utc-clock">00:00:00</span></div>
     </div>
@@ -217,8 +225,8 @@
         </select>
       </div>
       <div>
-        <button class="btn-sync" onclick="syncAll()">
-          <i class="fa-solid fa-rotate"></i> Sincronizar Tiempo Real
+        <button class="btn-sync" onclick="fetchWeatherData()">
+          <i class="fa-solid fa-rotate"></i> Sincronizar Datos
         </button>
       </div>
     </div>
@@ -227,13 +235,16 @@
       
       <div class="visor-card">
         <div class="visor-header">
-          <h3><i class="fa-solid fa-satellite"></i> Satélite GOES-16 (Nubes y Clima en Vivo)</h3>
+          <h3><i class="fa-solid fa-satellite-dish"></i> Radar Satelital de Lluvia y Nubes</h3>
           <div class="layer-buttons">
-            <button class="layer-btn active" onclick="setCapas('satelital')">Satélite Real</button>
-            <button class="layer-btn" onclick="setCapas('infrarrojo')">Infrarrojo (Tormentas)</button>
+            <button class="layer-btn active" onclick="setWindyOverlay('rain')">Radar Lluvia</button>
+            <button class="layer-btn" onclick="setWindyOverlay('clouds')">Nubes Satelital</button>
+            <button class="layer-btn" onclick="setWindyOverlay('temp')">Temperatura</button>
           </div>
         </div>
-        <div id="nasa-map"></div>
+        <div class="map-frame-wrapper">
+          <iframe id="windy-frame" src="https://embed.windy.com/embed2.html?lat=10.2469&lon=-67.5958&detailLat=10.2469&detailLon=-67.5958&width=650&height=450&zoom=7&level=surface&overlay=rain&product=ecmwf&menu=&message=&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"></iframe>
+        </div>
       </div>
 
       <div class="weather-panel">
@@ -270,7 +281,7 @@
         <div class="hourly-card">
           <h4><i class="fa-regular fa-clock"></i> Pronóstico de Lluvia Próximas Horas</h4>
           <div class="hourly-list" id="hourly-container">
-            <!-- Cargado por JS -->
+            <!-- Horas cargadas dinámicamente -->
           </div>
         </div>
       </div>
@@ -280,51 +291,24 @@
 
   <footer>
     <p>Desarrollado por <strong>Alfredo Belandria</strong></p>
-    <p style="margin-top: 0.3rem; font-size: 0.75rem;">Sincronizado con NOAA GOES-16 & Open-Meteo</p>
+    <p style="margin-top: 0.3rem; font-size: 0.75rem;">Sincronizado con Radar Satelital Global & Open-Meteo</p>
   </footer>
 
-  <!-- Leaflet JS -->
-  <svg></svg>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
   <script>
-    // Inicializar mapa centrado en Venezuela con límites de zoom seguros (sin errores)
-    let map = L.map('nasa-map', {
-      minZoom: 4,
-      maxZoom: 11
-    }).setView([7.1254, -66.1245], 6);
+    let currentLat = 10.2469;
+    let currentLon = -67.5958;
+    let currentOverlay = 'rain';
 
-    let currentMarker;
-    let weatherOverlay;
-
-    // Mapa base oscuro limpio
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-      attribution: '&copy; CARTO'
-    }).addTo(map);
-
-    // Cargar capa satelital en tiempo real de NOAA GOES (Sudamérica / Venezuela)
-    function loadSatelliteLayer(type) {
-      if (weatherOverlay) map.removeLayer(weatherOverlay);
-
-      // Usando imagery pública de RAMMB / NOAA GOES Sector Sudamérica
-      const url = type === 'satelital' 
-        ? 'https://cdn.star.nesdis.noaa.gov/GOES16/ABI/SECTOR/sa/GEOCOLOR/{z}/{x}/{y}.jpg' 
-        : 'https://cdn.star.nesdis.noaa.gov/GOES16/ABI/SECTOR/sa/13/{z}/{x}/{y}.jpg';
-
-      weatherOverlay = L.tileLayer(url, {
-        minZoom: 4,
-        maxZoom: 7,
-        opacity: 0.85,
-        errorTileUrl: '',
-        attribution: 'NOAA GOES-16 Satellite'
-      }).addTo(map);
+    function updateWindyIframe() {
+      const iframe = document.getElementById('windy-frame');
+      iframe.src = `https://embed.windy.com/embed2.html?lat=${currentLat}&lon=${currentLon}&detailLat=${currentLat}&detailLon=${currentLon}&width=650&height=450&zoom=7&level=surface&overlay=${currentOverlay}&product=ecmwf&menu=&message=&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1`;
     }
 
-    function setCapas(mode) {
+    function setWindyOverlay(overlay) {
+      currentOverlay = overlay;
       document.querySelectorAll('.layer-btn').forEach(btn => btn.classList.remove('active'));
       event.target.classList.add('active');
-      loadSatelliteLayer(mode);
+      updateWindyIframe();
     }
 
     function updateClock() {
@@ -337,18 +321,15 @@
     async function fetchWeatherData() {
       const select = document.getElementById('select-city');
       const selectedOption = select.options[select.selectedIndex];
-      const lat = parseFloat(selectedOption.getAttribute('data-lat'));
-      const lon = parseFloat(selectedOption.getAttribute('data-lon'));
+      currentLat = parseFloat(selectedOption.getAttribute('data-lat'));
+      currentLon = parseFloat(selectedOption.getAttribute('data-lon'));
       const cityName = selectedOption.text;
 
       document.getElementById('city-title').innerHTML = `<i class="fa-solid fa-location-dot"></i> ${cityName}`;
-
-      map.flyTo([lat, lon], 8);
-      if (currentMarker) map.removeLayer(currentMarker);
-      currentMarker = L.marker([lat, lon]).addTo(map).bindPopup(`<b>${cityName}</b>`).openPopup();
+      updateWindyIframe();
 
       try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=temperature_2m,precipitation_probability,relativehumidity_2m,weathercode&daily=precipitation_probability_max,uv_index_max&timezone=auto`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${currentLat}&longitude=${currentLon}&current_weather=true&hourly=temperature_2m,precipitation_probability,relativehumidity_2m,weathercode&daily=precipitation_probability_max,uv_index_max&timezone=auto`;
         const response = await fetch(url);
         const data = await response.json();
 
@@ -403,13 +384,6 @@
       fetchWeatherData();
     }
 
-    function syncAll() {
-      loadSatelliteLayer('satelital');
-      fetchWeatherData();
-    }
-
-    // Inicializar al cargar la página
-    loadSatelliteLayer('satelital');
     fetchWeatherData();
   </script>
 </body>
