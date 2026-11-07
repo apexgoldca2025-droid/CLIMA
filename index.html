@@ -128,22 +128,23 @@
       background: var(--accent-blue); color: white; border-color: var(--accent-blue);
     }
 
-    /* CONTENEDOR CON RECORTE PARA OCULTAR LA BARRA BLANCA INFERIOR */
+    /* CONTENEDOR OPTIMIZADO PARA RECORTAR LA BARRA INFERIOR */
     .map-frame-wrapper {
       width: 100%;
-      height: 320px;
-      background: #000;
+      height: 270px; /* Altura exacta optimizada para mostrar solo el mapa sin la barra blanca */
+      background: #0b0f19;
       position: relative;
       overflow: hidden;
     }
 
     .map-frame-wrapper iframe {
       width: 100%;
-      height: 440px; /* Se expande para empujar la barra fuera del visor visible */
+      height: 450px;
       border: none;
       position: absolute;
       top: 0;
       left: 0;
+      pointer-events: auto;
     }
 
     .weather-panel { display: flex; flex-direction: column; gap: 0.75rem; }
@@ -254,7 +255,7 @@
           </div>
         </div>
         <div class="map-frame-wrapper">
-          <iframe id="windy-frame" src="https://embed.windy.com/embed2.html?lat=10.2469&lon=-67.5958&detailLat=10.2469&detailLon=-67.5958&width=400&height=440&zoom=7&level=surface&overlay=rain&product=ecmwf&menu=&message=&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"></iframe>
+          <iframe id="windy-frame" src="https://embed.windy.com/embed2.html?lat=10.2469&lon=-67.5958&detailLat=10.2469&detailLon=-67.5958&width=400&height=450&zoom=7&level=surface&overlay=rain&product=ecmwf&menu=&message=&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"></iframe>
         </div>
       </div>
 
@@ -308,7 +309,7 @@
 
     function updateWindyIframe() {
       const iframe = document.getElementById('windy-frame');
-      iframe.src = `https://embed.windy.com/embed2.html?lat=${currentLat}&lon=${currentLon}&detailLat=${currentLat}&detailLon=${currentLon}&width=400&height=440&zoom=7&level=surface&overlay=${currentOverlay}&product=ecmwf&menu=&message=&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1`;
+      iframe.src = `https://embed.windy.com/embed2.html?lat=${currentLat}&lon=${currentLon}&detailLat=${currentLat}&detailLon=${currentLon}&width=400&height=450&zoom=7&level=surface&overlay=${currentOverlay}&product=ecmwf&menu=&message=&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1`;
     }
 
     function setWindyOverlay(overlay) {
